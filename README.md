@@ -1,4 +1,4 @@
-# Claude C# SDK Integration in .NET — Without Losing Your Mind
+# Claude C# SDK Integration in .NET
 
 A .NET 10 starter project demonstrating how to integrate the **Anthropic Claude API** into a C# application using the official [Anthropic .NET SDK](https://github.com/anthropics/anthropic-sdk-dotnet).
 
