@@ -14,6 +14,7 @@ A .NET 10 starter project demonstrating how to integrate the **Anthropic Claude 
 - Startup validation — missing API key crashes early with a clear message
 - `CancellationToken` propagation (streaming and blocking)
 - Dependency injection with `Microsoft.Extensions.Hosting`
+- ASP.NET Core Minimal API exposing Claude over HTTP (blocking, SSE streaming, tool use)
 
 ---
 
@@ -34,8 +35,11 @@ ClaudeWithDotNetSDK.sln
 │   ├── Configuration/AnthropicOptions.cs
 │   ├── Exceptions/ClaudeServiceException.cs
 │   └── Extensions/ServiceCollectionExtensions.cs
-└── ClaudeWithDotNetSDK.Console/     # Console demo app
-    ├── Program.cs
+├── ClaudeWithDotNetSDK.Console/     # Console demo app (5 sequential scenarios)
+│   ├── Program.cs
+│   └── appsettings.json
+└── ClaudeWithDotNetSDK.Api/         # ASP.NET Core Minimal API demo
+    ├── Program.cs                   # 4 endpoints: GET /, POST /api/ask, GET /api/ask/stream, POST /api/review
     └── appsettings.json
 ```
 
@@ -67,20 +71,29 @@ $env:Anthropic__ApiKey = "sk-ant-api03-..."
 export Anthropic__ApiKey="sk-ant-api03-..."
 ```
 
-Or paste it directly into `ClaudeWithDotNetSDK.Console/Properties/launchSettings.json` (not committed to source control).
+Or paste it directly into the project's `Properties/launchSettings.json` (not committed to source control).
 
 ### 3. Build and run
 
 ```bash
 dotnet build ClaudeWithDotNetSDK.sln
+```
+
+**Console demo** (5 sequential scenarios):
+```bash
 dotnet run --project ClaudeWithDotNetSDK.Console
+```
+
+**Web API** (runs on `http://localhost:5290`):
+```bash
+dotnet run --project ClaudeWithDotNetSDK.Api
 ```
 
 ---
 
 ## Demo Scenarios
 
-The console app runs five sequential tests:
+### Console app — five sequential tests
 
 | # | Scenario | What it shows |
 |---|----------|---------------|
@@ -89,6 +102,30 @@ The console app runs five sequential tests:
 | 3 | **Code review** | System prompt shaping Claude's reviewer persona |
 | 4 | **JSON extraction** | Structured output from unstructured text |
 | 5 | **Cancellation** | `OperationCanceledException` propagated correctly |
+
+### Web API — four endpoints
+
+| Method | Route | What it shows |
+|--------|-------|---------------|
+| `GET` | `/` | Health check — lists all available endpoints |
+| `POST` | `/api/ask` | Blocking ask, returns `{ "answer": "..." }` |
+| `GET` | `/api/ask/stream` | SSE streaming via `?prompt=...` query param |
+| `POST` | `/api/review` | Two-turn tool-use flow (order status lookup) |
+
+```bash
+# Blocking ask
+curl -X POST http://localhost:5290/api/ask \
+  -H "Content-Type: application/json" \
+  -d '{"Prompt":"What is dependency injection?","System":"Be concise."}'
+
+# Streaming
+curl http://localhost:5290/api/ask/stream?prompt=Tell+me+a+joke
+
+# Tool use
+curl -X POST http://localhost:5290/api/review \
+  -H "Content-Type: application/json" \
+  -d '{"Prompt":"What is the status of order ORD-1234?","System":null}'
+```
 
 ---
 
@@ -162,6 +199,12 @@ await foreach (var token in claude.AskStreamingAsync("Tell me a story.", ct: ct)
 | Package | Version | Purpose |
 |---------|---------|---------|
 | [`Microsoft.Extensions.Hosting`](https://www.nuget.org/packages/Microsoft.Extensions.Hosting) | 10.0.8 | Host, DI, configuration, logging |
+
+### ClaudeWithDotNetSDK.Api
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| [`Microsoft.AspNetCore.OpenApi`](https://www.nuget.org/packages/Microsoft.AspNetCore.OpenApi) | 10.0.1 | OpenAPI support for Minimal APIs |
 
 ---
 

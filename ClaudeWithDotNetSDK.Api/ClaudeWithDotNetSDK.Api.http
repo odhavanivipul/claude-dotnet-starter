@@ -1,0 +1,35 @@
+@ClaudeWithDotNetSDK.Api_HostAddress = http://localhost:5290
+
+### Health check
+GET {{ClaudeWithDotNetSDK.Api_HostAddress}}/
+Accept: application/json
+
+###
+
+### Blocking ask
+POST {{ClaudeWithDotNetSDK.Api_HostAddress}}/api/ask
+Content-Type: application/json
+
+{
+  "Prompt": "In one sentence: what is dependency injection?",
+  "System": "You are a senior .NET engineer. Be blunt and concise."
+}
+
+###
+
+### Streaming ask (open in browser or curl --no-buffer)
+GET {{ClaudeWithDotNetSDK.Api_HostAddress}}/api/ask/stream?prompt=List+3+.NET+10+features+for+backend+developers
+Accept: text/event-stream
+
+###
+
+### Tool use — order status
+POST {{ClaudeWithDotNetSDK.Api_HostAddress}}/api/review
+Content-Type: application/json
+
+{
+  "Prompt": "What is the status of order ORD-1234?",
+  "System": null
+}
+
+###
